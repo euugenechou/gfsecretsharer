@@ -44,7 +44,7 @@ void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
 
   GF8_t secret = 0;
   uint64_t size = 1;
-  uint64_t capacity = 4096;
+  uint64_t capacity = BLOCK;
 
   for (GF8_t i = 0; i < n; i += 1) {
     shares[i] = (GF8_t *)malloc(capacity * sizeof(GF8_t));
