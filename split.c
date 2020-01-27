@@ -5,12 +5,14 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define THRESHOLD   5
 #define SHARES      10
-#define OPTIONS     "k:n:i:o:r:h"
+#define SEED        1337
+#define OPTIONS     "hvk:vn:i:o:r:"
 
 void print_usage(char **argv) {
   fprintf(stderr,
@@ -22,17 +24,18 @@ void print_usage(char **argv) {
     "   %s [-h] [-r seed] [-k threshold] [-n shares] [-i input] [-o output]\n"
     "\n"
     "OPTIONS\n"
-    "   -h              Display program usage\n"
-    "   -r seed         Specify random seed (default 1337)\n"
-    "   -k threshold    Specify threshold for number of shares (default: 5)\n"
-    "   -n shares       Specify number of shares to generate (default: 10)\n"
-    "   -i input        Specify input (secret to split) (default: stdin)\n"
-    "   -o output       Specify output (default: stdout)\n",
+    "   -h              Display program usage.\n"
+    "   -v              Print out size of created shares.\n"
+    "   -r seed         Specify random seed.\n"
+    "   -k threshold    Specify threshold for number of shares (default: 5).\n"
+    "   -n shares       Specify number of shares to generate (default: 10).\n"
+    "   -i input        Specify input (secret to split) (default: stdin).\n"
+    "   -o output       Specify output (default: stdout).\n",
     argv[0]);
   return;
 }
 
-void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
+uint64_t split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
   GF8_t **shares = (GF8_t **)malloc(n * sizeof(GF8_t *));
   check(shares, "Failed to allocate array of shares.\n");
 
@@ -73,11 +76,13 @@ void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
 
   flush_buffer(outfile);
   free(shares);
-  return;
+
+  return size << 1;
 }
 
 int main(int argc, char **argv) {
   int opt = 0;
+  bool verbose = false;
   FILE *infile = stdin;
   FILE *outfile = stdout;
   uint32_t seed = time(NULL);
@@ -86,6 +91,9 @@ int main(int argc, char **argv) {
 
   while ((opt = getopt(argc, argv, OPTIONS)) != -1) {
     switch (opt) {
+    case 'v':
+      verbose = true;
+      break;
     case 'k':
       threshold = (uint64_t)strtoull(optarg, NULL, 10);
       break;
@@ -117,7 +125,12 @@ int main(int argc, char **argv) {
   check(shares < GF_MAX, "Too many shares for GF(256)!\n");
 
   srand(seed);
-  split(infile, outfile, threshold, shares);
+
+  uint64_t share_size = split(infile, outfile, threshold, shares);
+
+  if (verbose) {
+    printf("Share size: %" PRIu64 " bytes.\n", share_size);
+  }
 
   fclose(infile);
   fclose(outfile);
