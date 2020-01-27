@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+extern uint64_t total_read;
+extern uint64_t total_written;
+
 bool read_secret(FILE *infile, GF8_t *secret);
 
 void buffer_share(FILE *outfile, GF8_t *share, uint64_t size);

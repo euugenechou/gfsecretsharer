@@ -12,6 +12,8 @@
 #define SHARES    10
 #define OPTIONS   "hvn:k:i:o:"
 
+extern uint64_t total_written;
+
 void print_usage(char **argv) {
   fprintf(stderr,
     "SYNOPSIS\n"
@@ -32,7 +34,7 @@ void print_usage(char **argv) {
   return;
 }
 
-uint64_t join(FILE *infile, FILE *outfile, GF8_t n, uint64_t size) {
+void join(FILE *infile, FILE *outfile, GF8_t n, uint64_t size) {
   GF8_t **shares = (GF8_t **)malloc(n * sizeof(GF8_t *));
   check(shares, "Failed to allocate array of shares.\n");
 
@@ -59,8 +61,7 @@ uint64_t join(FILE *infile, FILE *outfile, GF8_t n, uint64_t size) {
   flush_buffer(outfile);
   free(xs);
   free(ys);
-
-  return (size >> 1) - 1;
+  return;
 }
 
 int main(int argc, char **argv) {
@@ -99,10 +100,11 @@ int main(int argc, char **argv) {
     }
   }
 
-  uint64_t secret_size = join(infile, outfile, shares, size);
+  join(infile, outfile, shares, size);
 
   if (verbose) {
-    printf("Reconstructed secret: %" PRIu64 " bytes.\n", secret_size);
+    printf("Share size: %" PRIu64 " bytes.\n", size);
+    printf("Secret size: %" PRIu64 " bytes.\n", total_written);
   }
 
   fclose(infile);

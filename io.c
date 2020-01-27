@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+uint64_t total_read = 0;
+uint64_t total_written = 0;
+
 static uint8_t in_buf[BLOCK];
 static uint16_t in_cnt = 0;
 static uint16_t in_end = UINT16_MAX;
@@ -17,6 +20,7 @@ static void read_buffer(FILE *infile) {
   if (!in_cnt) {
     uint16_t bytes_read = fread(in_buf, sizeof(uint8_t), BLOCK, infile);
     in_end = (bytes_read == BLOCK) ? in_end : bytes_read + 1;
+    total_read += bytes_read;
   }
 
   return;
@@ -26,6 +30,7 @@ static void write_buffer(FILE *outfile) {
   if (out_cnt == BLOCK) {
     fwrite(out_buf, sizeof(uint8_t), BLOCK, outfile);
     out_cnt = 0;
+    total_written += BLOCK;
   }
 
   return;
@@ -90,6 +95,7 @@ void buffer_secret(FILE *outfile, GF8_t secret) {
 void flush_buffer(FILE *outfile) {
   if (out_cnt) {
     fwrite(out_buf, sizeof(uint8_t), out_cnt, outfile);
+    total_written += out_cnt;
   }
 
   return;

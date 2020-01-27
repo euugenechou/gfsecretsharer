@@ -14,6 +14,9 @@
 #define SEED        1337
 #define OPTIONS     "hvk:vn:i:o:r:"
 
+extern uint64_t total_read;
+extern uint64_t total_written;
+
 void print_usage(char **argv) {
   fprintf(stderr,
     "SYNOPSIS\n"
@@ -35,7 +38,7 @@ void print_usage(char **argv) {
   return;
 }
 
-uint64_t split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
+void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
   GF8_t **shares = (GF8_t **)malloc(n * sizeof(GF8_t *));
   check(shares, "Failed to allocate array of shares.\n");
 
@@ -76,8 +79,7 @@ uint64_t split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
 
   flush_buffer(outfile);
   free(shares);
-
-  return size << 1;
+  return;
 }
 
 int main(int argc, char **argv) {
@@ -125,11 +127,11 @@ int main(int argc, char **argv) {
   check(shares < GF_MAX, "Too many shares for GF(256)!\n");
 
   srand(seed);
-
-  uint64_t share_size = split(infile, outfile, threshold, shares);
+  split(infile, outfile, threshold, shares);
 
   if (verbose) {
-    printf("Share size: %" PRIu64 " bytes.\n", share_size);
+    printf("Secret size: %" PRIu64 " bytes.\n", total_read);
+    printf("Share size: %" PRIu64 " bytes.\n", (total_written - shares) / shares);
   }
 
   fclose(infile);
