@@ -36,7 +36,7 @@ void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
   GF8_t **shares = (GF8_t **)malloc(n * sizeof(GF8_t *));
   check(shares, "Failed to allocate array of shares.\n");
 
-  uint8_t sym = 0;
+  GF8_t secret = 0;
   uint64_t size = 1;
   uint64_t capacity = 4096;
 
@@ -47,8 +47,8 @@ void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
     shares[i][0] = i + 1;
   }
 
-  while (read_byte(infile, &sym)) {
-    Polynomial *p = polynomial_create(k, sym);
+  while (read_secret(infile, &secret)) {
+    Polynomial *p = polynomial_create(k, secret);
 
     for (GF8_t x = 1; x < n + 1; x += 1) {
       shares[x - 1][size] = polynomial_eval(p, x);
@@ -67,10 +67,11 @@ void split(FILE *infile, FILE *outfile, GF8_t k, GF8_t n) {
   }
 
   for (GF8_t i = 0; i < n; i += 1) {
-    write_share(outfile, shares[i], size);
+    buffer_share(outfile, shares[i], size);
     free(shares[i]);
   }
 
+  flush_buffer(outfile);
   free(shares);
   return;
 }

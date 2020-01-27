@@ -45,27 +45,16 @@ void join(FILE *infile, FILE *outfile, GF8_t n, uint64_t size) {
   GF8_t *ys = (GF8_t *)malloc(n * sizeof(GF8_t));
   check(xs && ys, "Failed to allocate coordinate array(s).\n");
 
-  uint8_t secret[BLOCK];
-  uint16_t byte = 0;
-
   for (uint64_t i = 1; i < (size >> 1); i += 1) {
     for (GF8_t j = 0; j < n; j += 1) {
       xs[j] = shares[j][0];
       ys[j] = shares[j][i];
     }
 
-    secret[byte++] = polynomial_interpolate(xs, ys, n);
-
-    if (byte == BLOCK) {
-      fwrite(secret, sizeof(uint8_t), BLOCK, outfile);
-      byte = 0;
-    }
+    buffer_secret(outfile, polynomial_interpolate(xs, ys, n));
   }
 
-  if (byte) {
-    fwrite(secret, sizeof(uint8_t), byte, outfile);
-  }
-
+  flush_buffer(outfile);
   free(xs);
   free(ys);
   return;

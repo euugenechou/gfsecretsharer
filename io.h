@@ -6,11 +6,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-bool read_byte(FILE *infile, uint8_t *byte);
+bool read_secret(FILE *infile, GF8_t *secret);
 
-void write_share(FILE *outfile, GF8_t *share, uint64_t size);
+void buffer_share(FILE *outfile, GF8_t *share, uint64_t size);
 
 void read_share(FILE *infile, GF8_t *share, uint64_t size);
+
+void buffer_secret(FILE *outfile, GF8_t secret);
+
+void flush_buffer(FILE *outfile);
 
 #endif
 
